@@ -3,6 +3,16 @@
  * revised 2019
  */
 
+//This program is a ground up re-write of a tool written by Jeroen Holtuis and Phillip Stearns,
+//inspired by the LoomPreview application developed for Phillip Stearns by Paul Kerchen.
+//It's purpose is to serve as a flexible tool for visualizing raw binary data.
+//This preliminary program only offers translation of binary data to 0-8 bits per channel RGB
+//shift+s to save output
+
+// Phillip Stearns: https://phillipstearns.com
+// Jeroen Holthuis: https://www.jeroenholthuis.nl/
+// Paul Kerchen: https://github.com/kerchen
+
 import controlP5.*;
 
 // ControlFrame for GUI

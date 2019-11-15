@@ -181,6 +181,7 @@ void renderRGB() {
 
     int origin=i+pixel_offset;
     int index=0;
+    int data=0;
     int chan1 = 0;
     int chan2 = 0; 
     int chan3 = 0; 
@@ -191,37 +192,31 @@ void renderRGB() {
 
     //using some bit shifting voodoo to pack bits into channel values  
 
-
     for (int x = 0; x < chan1_depth; x++) {
+      data=0;
       index=(origin*pixel_depth)+x+bit_offset;
-      if (index < raw_bits.length ) {
-        chan1 |=  int(raw_bits[index]) << x;
-      } else {
-        chan1 |=  0 << x;
-      }
+      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      chan1 |= data << x;
     }
     chan1*=(255/(pow(2, (chan1_depth))-1)); //scale to 0-255
 
     for (int y = 0; y < chan2_depth; y++) {
+      data=0;
       index = (origin*pixel_depth)+chan1_depth+y+bit_offset;
-      if (index < raw_bits.length ) {
-        chan2 |=  int(raw_bits[index]) << y;
-      } else {
-        chan2 |=  0 << y;
-      }
+      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      chan2 |= data << y;
     }
     chan2*=(255/(pow(2, (chan2_depth))-1)); //scale to 0-255
 
     for (int z = 0; z < chan3_depth; z++) {
+      data=0;
       index=(origin*pixel_depth)+chan1_depth+chan2_depth+z+bit_offset;
-      if (index < raw_bits.length) {
-        chan3 |=  int(raw_bits[index]) << z;
-      } else {
-        chan3 |= 0 << z;
-      }
+      if (index < raw_bits.length) data = int(raw_bits[index]);
+      chan3 |= data << z;
     }
     chan3*=(255/(pow(2, (chan3_depth))-1)); //scale to 0-255
 
+    //channel invert (pre RGB assignment)
     if (red_invert_pre)chan1^=0xFF;
     if (green_invert_pre)chan2^=0xFF;
     if (blue_invert_pre)chan3^=0xFF;
@@ -260,12 +255,12 @@ void renderRGB() {
       break;
     }
 
-    //channel invert
+    //channel invert (post RGB assignment)
     if (red_invert) red^=0xFF;
     if (green_invert) green^=0xFF;
     if (blue_invert) blue^=0xFF;
 
-    pixels[i] = 255 <<24 |red << 16 | green << 8 | blue;
+    pixels[i] = 255 << 24 |red << 16 | green << 8 | blue;
   }
   updatePixels();
 }
@@ -274,21 +269,23 @@ void renderGreyscale() {
   loadPixels();
   for (int i = 0; i < pixels.length; i++) {
     int origin=i+pixel_offset;
-    int pixel = 0;
-    if ((origin)*bw_depth+bw_depth+bit_offset < raw_bits.length) {
+    int pixel=0;
+    int index=0;
+    int data=0;
 
-      for (int x = 0; x < bw_depth; x++) {
-        pixel |=  int(raw_bits[((origin)*bw_depth)+x+bit_offset]) << x;
-      }
 
-      pixel*=(255/(pow(2, (bw_depth))-1)); //scale to 0-255
-
-      if (bw_invert)pixel^=0xFF;
-
-      pixels[i] = color(pixel);
-    } else {
-      pixels[i] = color(0);
+    for (int x = 0; x < bw_depth; x++) {
+      data=0;
+      index=((origin)*bw_depth)+x+bit_offset;
+      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      pixel |=  data << x;
     }
+
+    pixel*=(255/(pow(2, (bw_depth))-1)); //scale to 0-255
+
+    if (bw_invert)pixel^=0xFF;
+
+    pixels[i] = color(pixel);
   }
   updatePixels();
 }

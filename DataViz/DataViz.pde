@@ -47,26 +47,30 @@ import controlP5.*;
 // ControlFrame for GUI
 ControlFrame gui;
 
+//Control Frame Dimensions and Location
 int GUIWidth = 500;
 int GUIHeight = 225;
 int GUILocationX = 0;
 int GUILocationY = 10;
 
+//DataViz Frame Dimensions and Location
+int screen_width = 768;
+int screen_height = 1000;
 int WindowLocationX = GUIWidth;
 int WindowLocationY = 10;
 
 // store bytes from selected file
-byte[] raw_bytes = null;
-boolean[] raw_bits = null;
+byte[] raw_bytes = new byte[0];
+boolean[] raw_bits = new boolean[0];
 
-// 
+// render control variables
 int mode=0; // 0 = RGB interleaved, 1 = Greyscale, 2 = RGB planar (TBD)  
 int bit_offset = 0; // skips bits 
 int pixel_offset = 0; // skips pixels
+int line_multiplier = 1;
 
 // sets number of bits to be packed into color channel values
-int bw_depth, chan1_depth = 1, chan2_depth = 1, chan3_depth = 1, pixel_depth=0, swap_mode=-1;
-int line_multiplier = 1;
+int bw_depth=1, chan1_depth=1, chan2_depth=1, chan3_depth=1, pixel_depth=0, swap_mode=0;
 
 boolean red_invert=false;
 boolean green_invert=false;
@@ -77,29 +81,25 @@ boolean red_invert_pre=false;
 boolean green_invert_pre=false;
 boolean blue_invert_pre=false;
 
-int screen_width = 768;
-int screen_height = 1000;
+PImage render = createImage(screen_width, screen_height, RGB);
 
 void setup() {
-  size(10, 10);
-
+  //window setup
+  size(0, 0);
   surface.setLocation(WindowLocationX, WindowLocationY);
   surface.setResizable(true);
   surface.setSize(screen_width, screen_height);
-
-  initVariables();
-  setDepth(1, 1, 1);
-
-  gui = new ControlFrame(this, GUILocationX, GUILocationY, GUIWidth, GUIHeight);
   background(0);
-
+  gui = new ControlFrame(this, GUILocationX, GUILocationY, GUIWidth, GUIHeight);
+  setDepth(1, 1, 1);  
   noLoop();
 }
 
 void draw() {
   background(0);
-  if (raw_bytes.length != 0 && raw_bits.length != 0) {
-    bits_to_pixels();
+  if (raw_bits.length != 0) {
+    bits_to_pixels(render);
+    image(render,0,0);
   }
 }
 
@@ -110,32 +110,9 @@ void setDepth(int depth1, int depth2, int depth3) {
   pixel_depth = chan1_depth + chan2_depth + chan3_depth;
 }
 
-void initVariables() {
-
-  raw_bytes = new byte[0];
-  raw_bits = new boolean[0];
-
-  mode=0; // 0 = RGB , 1 = Greyscale
-  bit_offset = 0; // skips bits 
-  pixel_offset = 0; // skips pixels
-
-  line_multiplier = 1;
-
-  red_invert=false;
-  green_invert=false;
-  blue_invert=false;
-  bw_invert=false;
-
-  bw_depth=1;
-  swap_mode=0;
-
-  red_invert_pre=false;
-  green_invert_pre=false;
-  blue_invert_pre=false;
-}
 
 void loadData(String thePath) {
-
+  
   raw_bytes = loadBytes(thePath);
   raw_bits = bytes_to_bits(raw_bytes);
 
@@ -151,11 +128,11 @@ void saveData(String thePath) {
 
 void setScreenSize(int _width, int _height) {
   surface.setSize(_width, _height);
-  println("Screen size = "+width+" x "+height);
+  render = createImage(_width, _height, RGB);
 }
 
 boolean[] bytes_to_bits(byte[] _bytes) {
-  boolean[] bits = new boolean[raw_bytes.length*8];
+  boolean[] bits = new boolean[_bytes.length*8];
   for (int i = 0; i < _bytes.length; i++) {    
     for (int j = 0; j < 8; j++) {    
       bits[(i*8)+j] = boolean((_bytes[i] >> j) & 1);
@@ -164,20 +141,20 @@ boolean[] bytes_to_bits(byte[] _bytes) {
   return bits;
 }
 
-void bits_to_pixels() {
+void bits_to_pixels(PImage _image) {
   switch(mode) {
   case 0:
-    renderRGB();
+    renderRGB(_image);
     break;
   case 1:
-    renderGreyscale();
+    renderGreyscale(_image);
     break;
   }
 }
 
-void renderRGB() {
-  loadPixels();
-  for (int i = 0; i < pixels.length; i++) {
+void renderRGB(PImage _image) {
+  _image.loadPixels();
+  for (int i = 0; i < _image.pixels.length; i++) {
 
     int origin=i+pixel_offset;
     int index=0;
@@ -195,7 +172,7 @@ void renderRGB() {
     for (int x = 0; x < chan1_depth; x++) {
       data=0;
       index=(origin*pixel_depth)+x+bit_offset;
-      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]);
       chan1 |= data << x;
     }
     chan1*=(255/(pow(2, (chan1_depth))-1)); //scale to 0-255
@@ -203,7 +180,7 @@ void renderRGB() {
     for (int y = 0; y < chan2_depth; y++) {
       data=0;
       index = (origin*pixel_depth)+chan1_depth+y+bit_offset;
-      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]);
       chan2 |= data << y;
     }
     chan2*=(255/(pow(2, (chan2_depth))-1)); //scale to 0-255
@@ -211,7 +188,7 @@ void renderRGB() {
     for (int z = 0; z < chan3_depth; z++) {
       data=0;
       index=(origin*pixel_depth)+chan1_depth+chan2_depth+z+bit_offset;
-      if (index < raw_bits.length) data = int(raw_bits[index]);
+      if (index >=0 && index < raw_bits.length) data = int(raw_bits[index]);
       chan3 |= data << z;
     }
     chan3*=(255/(pow(2, (chan3_depth))-1)); //scale to 0-255
@@ -260,24 +237,23 @@ void renderRGB() {
     if (green_invert) green^=0xFF;
     if (blue_invert) blue^=0xFF;
 
-    pixels[i] = 255 << 24 |red << 16 | green << 8 | blue;
+    _image.pixels[i] = 255 << 24 |red << 16 | green << 8 | blue;
   }
-  updatePixels();
+  _image.updatePixels();
 }
 
-void renderGreyscale() {
-  loadPixels();
-  for (int i = 0; i < pixels.length; i++) {
+void renderGreyscale(PImage _image) {
+  _image.loadPixels();
+  for (int i = 0; i < _image.pixels.length; i++) {
     int origin=i+pixel_offset;
     int pixel=0;
     int index=0;
     int data=0;
 
-
     for (int x = 0; x < bw_depth; x++) {
       data=0;
       index=((origin)*bw_depth)+x+bit_offset;
-      if (index < raw_bits.length ) data = int(raw_bits[index]);
+      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]);
       pixel |=  data << x;
     }
 
@@ -285,7 +261,7 @@ void renderGreyscale() {
 
     if (bw_invert)pixel^=0xFF;
 
-    pixels[i] = color(pixel);
+    _image.pixels[i] = color(pixel);
   }
-  updatePixels();
+  _image.updatePixels();
 }

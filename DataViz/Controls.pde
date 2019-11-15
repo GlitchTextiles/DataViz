@@ -255,10 +255,10 @@ public class ControlFrame extends PApplet {
         frame_dec(1);
         break;
       case 37: //LEFTARROW
-        pixel_dec();
+        if (bit_offset>0) cp5.getController( "set_bit_offset").setValue(bit_offset-1);
         break;
       case 39: //RIGHTARROW
-        pixel_inc();
+        if (bit_offset<pixel_depth) cp5.getController( "set_bit_offset").setValue(bit_offset+1);
         break;
       }
     } else {
@@ -347,36 +347,28 @@ public class ControlFrame extends PApplet {
       println("invert = "+bw_invert);
       break;
     case 'r': //incrase red channel bit depth
-      if (chan1_depth < 8) cp5.getController("set_chan1_depth").setValue(++chan1_depth);
-      println("Channel 1 Depth = "+chan1_depth);
+      if (chan1_depth >= 0) cp5.getController("set_chan1_depth").setValue(++chan1_depth);
       break;
     case 'R': //decrease red channel bit depth
       if (chan1_depth < 8) cp5.getController("set_chan1_depth").setValue(--chan1_depth);
-      println("Channel 1 Depth = "+chan1_depth);
       break;
     case 'g': //increase green channel bit depth
-      if (chan2_depth < 8) cp5.getController("set_chan2_depth").setValue(++chan2_depth);
-      println("Channel 2 Depth = "+chan2_depth);
+      if (chan2_depth >= 0) cp5.getController("set_chan2_depth").setValue(++chan2_depth);
       break;
     case 'G': //decrease green channel bit depth
       if (chan2_depth < 8) cp5.getController("set_chan2_depth").setValue(--chan2_depth);
-      println("Channel 2 Depth = "+chan2_depth);
       break;
     case 'b': //increase blue channel bit depth
-      if (chan3_depth < 8) cp5.getController("set_chan3_depth").setValue(++chan3_depth);
-      println("Channel 3 Depth = "+chan3_depth);
+      if (chan3_depth >= 0) cp5.getController("set_chan3_depth").setValue(++chan3_depth);
       break;
     case 'B': //decrease blue channel bit depth 
       if (chan3_depth < 8) cp5.getController("set_chan3_depth").setValue(--chan3_depth);
-      println("Channel 3 Depth = "+chan3_depth);
       break;
     case '(': //decrease greyscale bit depth
       if (bw_depth>1) bw_depth--;
-      println("Greyscale bit depth = "+bw_depth);
       break;
     case ')': //increase greyscale bit depth 
       if (bw_depth<24) bw_depth++;
-      println("Greyscale bit depth = "+bw_depth);
     case '[': //decrease window width by 1 pixel
       set_window_width(screen_width-1);
       break;
@@ -441,10 +433,14 @@ public class ControlFrame extends PApplet {
   }
 
   public void window_height(int _screen_height) {
-    setScreenSize(screen_width, _screen_height);
+    screen_height=_screen_height;
+    setScreenSize(screen_width, screen_height);
+    updatePixelOffsetSlider();
   }
   public void window_width(int _screen_width) {
-    setScreenSize(_screen_width, screen_height);
+    screen_width = _screen_width;
+    setScreenSize(screen_width, screen_height);
+    updatePixelOffsetSlider();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -477,7 +473,7 @@ public class ControlFrame extends PApplet {
   }
 
   public void updatePixelOffsetSlider() {
-    if (raw_bits.length >0) {
+    if (raw_bits.length > 0) {
       float divisor=1.0;
       switch(mode) {
       case 0:
@@ -489,8 +485,9 @@ public class ControlFrame extends PApplet {
       default:
         break;
       }
+      float maxOffset = constrain((raw_bits.length/divisor)-(screen_height*screen_width), 1, (raw_bits.length/divisor));
       cp5.get(Slider.class, "set_pixel_offset")
-        .setRange(0, (raw_bits.length/divisor)-(screen_height*screen_width))
+        .setRange(0, maxOffset)
         .setValue(pixel_offset)
         ;
     }
@@ -521,7 +518,8 @@ public class ControlFrame extends PApplet {
       default:
         break;
       }
-      int maxOffset=int((raw_bits.length/divisor) - (screen_width*screen_height));
+      int maxOffset = (int) constrain((raw_bits.length/divisor)-(screen_height*screen_width), 0, (raw_bits.length/divisor));
+
       if ( _offset >= 0 ) {
         if (_offset < maxOffset) {
           pixel_offset = _offset;

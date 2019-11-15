@@ -6,7 +6,8 @@
 //This program is a ground up re-write of a tool written by Jeroen Holtuis and Phillip Stearns,
 //inspired by the LoomPreview application developed for Phillip Stearns by Paul Kerchen.
 //It's purpose is to serve as a flexible tool for visualizing raw binary data.
-//This preliminary program only offers translation of binary data to 0-8 bits per channel RGB
+//This preliminary program offers translation of binary data to 0-8 bits per channel RGB
+//as well as 8-bit greyscale translation.
 
 // Phillip Stearns: https://phillipstearns.com
 // Jeroen Holthuis: https://www.jeroenholthuis.nl/
@@ -84,7 +85,7 @@ void setup() {
 
   surface.setLocation(WindowLocationX, WindowLocationY);
   surface.setResizable(true);
-  setScreenSize(screen_width, screen_height);
+  surface.setSize(screen_width, screen_height);
 
   initVariables();
   setDepth(1, 1, 1);

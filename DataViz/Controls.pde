@@ -240,29 +240,6 @@ public class ControlFrame extends PApplet {
     background(0);
   }
 
-  /****************************************************
-   Key Bindings:
-   o - open file dialog
-   s - save file dialog
-   0 - toggle RGB <> BW mode
-   1-6 - RGB channel swap modes
-   q - toggle R chan invert
-   w - toggle G chan invert
-   e - toggle B chan invert
-   Q - toggle chan1 invert
-   W - toggle chan2 invert
-   E - toggle chan3 invert
-   z - invert BW mode
-   UPARROW
-   DOWNARROW
-   LEFTARROW
-   RIGHTARROW
-   SHIFT+UPARROW
-   SHIFT+DOWNARROW
-   SHIFT+LEFTARROW
-   SHIFT+RIGHTARROW
-   ****************************************************/
-
   boolean shift = false;
 
   void keyPressed() {

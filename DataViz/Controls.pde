@@ -1,11 +1,14 @@
 //////////////////////////////////////////////
 // GUI
+//////////////////////////////////////////////
 
 public class ControlFrame extends PApplet {
 
   int w, h, x, y;
   PApplet parent;
   ControlP5 cp5;
+  boolean shift = false;
+  float value = 0.0;
 
   public ControlFrame(PApplet _parent, int _x, int _y, int _w, int _h) {
     super();   
@@ -26,7 +29,7 @@ public class ControlFrame extends PApplet {
     cp5 = new ControlP5(this);
 
     background(0);
-    ;
+
     // controls for skipping bits 
     cp5.addSlider("set_bit_offset")
       .setLabel("bit offset")
@@ -200,7 +203,6 @@ public class ControlFrame extends PApplet {
       .setSize(50, 20)
       .setMin(1)
       .setValue(screen_width)
-      .setDirection(Controller.HORIZONTAL)
       .setLabel("width")
       ; 
     cp5.addNumberbox("window_height")
@@ -208,7 +210,6 @@ public class ControlFrame extends PApplet {
       .setSize(50, 20)
       .setMin(1)
       .setValue(screen_height)
-      .setDirection(Controller.HORIZONTAL)
       .setLabel("height")
       ; 
 
@@ -216,7 +217,8 @@ public class ControlFrame extends PApplet {
       .setPosition(300, 10)
       .setSize(50, 20)
       .setLabel("enter width")
-      ; 
+      ;
+      
     cp5.addTextfield("set_window_height")
       .setPosition(300, 45)
       .setSize(50, 20)
@@ -240,12 +242,14 @@ public class ControlFrame extends PApplet {
     background(0);
   }
 
-  boolean shift = false;
+  //////////////////////////////////////////////
+  // Key Bindings
+  //////////////////////////////////////////////
 
   void keyPressed() {
 
+    // Bindings for arrow/direction keys
     if (keyCode == SHIFT) shift = true;
-
     if (shift) {
       switch(keyCode) {
       case 38: //UPARROW
@@ -285,66 +289,91 @@ public class ControlFrame extends PApplet {
     case 's':
       save_file();
       break;
+    case 'f':
+      println(generateFilename());
+      break;
     case '0':
       cp5.get(Toggle.class, "set_color_mode").setValue(mode^1);
       break;
     case '1':
       swap_mode(0);
       cp5.get(RadioButton.class, "swap_mode").activate(0);
-      println("channel swap mode: "+swap_mode);
       break;
     case '2':
       swap_mode(1);
       cp5.get(RadioButton.class, "swap_mode").activate(1);
-      println("channel swap mode: "+swap_mode);
       break;
     case '3':
       swap_mode(2);
       cp5.get(RadioButton.class, "swap_mode").activate(2);
-      println("channel swap mode: "+swap_mode);
       break;
     case '4':
       swap_mode(3);
       cp5.get(RadioButton.class, "swap_mode").activate(3);
-      println("channel swap mode: "+swap_mode);
       break;
     case '5':
       swap_mode(4);
       cp5.get(RadioButton.class, "swap_mode").activate(4);
-      println("channel swap mode: "+swap_mode);
       break;
     case '6':
       swap_mode(5);
       cp5.get(RadioButton.class, "swap_mode").activate(5);
-      println("channel swap mode: "+swap_mode);
       break;
     case 'q':
-      red_invert=!red_invert;
-      println("red_invert = "+red_invert);
+      if (red_invert) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("R_INV").setValue(value);
       break;
     case 'w':
-      green_invert=!green_invert;
-      println("green_invert = "+green_invert);
+      if (green_invert) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("G_INV").setValue(value);
       break;
     case 'e':
-      blue_invert=!blue_invert;
-      println("blue_invert = "+blue_invert);
+      if (blue_invert) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("B_INV").setValue(value);
       break;
     case 'Q':
-      red_invert_pre=!red_invert_pre;
-      println("red_invert_pre = "+red_invert_pre);
+      if (red_invert_pre) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("R_INV_PRE").setValue(value);
       break;
     case 'W':
-      green_invert_pre=!green_invert_pre;
-      println("green_invert_pre = "+green_invert_pre);
+      if (green_invert_pre) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("G_INV_PRE").setValue(value);
       break;
     case 'E':
-      blue_invert_pre=!blue_invert_pre;
-      println("blue_invert_pre = "+blue_invert_pre);
+      if (blue_invert_pre) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("B_INV_PRE").setValue(value);
       break;
     case 'z':
-      bw_invert=!bw_invert;
-      println("invert = "+bw_invert);
+      if (bw_invert) {
+        value = 0.0;
+      } else {
+        value = 1.0;
+      }
+      cp5.getController("INV").setValue(value);
       break;
     case 'r': //incrase red channel bit depth
       if (chan1_depth >= 0) cp5.getController("set_chan1_depth").setValue(++chan1_depth);
@@ -365,10 +394,10 @@ public class ControlFrame extends PApplet {
       if (chan3_depth < 8) cp5.getController("set_chan3_depth").setValue(--chan3_depth);
       break;
     case '(': //decrease greyscale bit depth
-      if (bw_depth>1) bw_depth--;
+      if (bw_depth>1) cp5.getController("depth").setValue(bw_depth-1);
       break;
     case ')': //increase greyscale bit depth 
-      if (bw_depth<24) bw_depth++;
+      if (bw_depth<24) cp5.getController("depth").setValue(bw_depth+1);
     case '[': //decrease window width by 1 pixel
       set_window_width(screen_width-1);
       break;
@@ -392,6 +421,84 @@ public class ControlFrame extends PApplet {
   /////////////////////////////////////////////////////////////////
   // File Handling
   /////////////////////////////////////////////////////////////////
+
+  String generateFilename() {
+    //format: <inputFile>-<ch1_depth><ch2_depth><ch3_depth><swap_mode>-<bit_offset>-<pixeloffset>
+    String sep = "-";
+    String filename= "";
+    if (thePath.length() > 0) {
+      String[] parsedPath = splitTokens(thePath, "/\\");
+      String inputFile = charSub(parsedPath[parsedPath.length-1]);
+      int radioIndex=int(cp5.get(RadioButton.class, "swap_mode").getValue());
+      String swap_mode=cp5.get(RadioButton.class, "swap_mode").getItem(radioIndex).getName();
+      filename+=inputFile;
+      filename+= sep;
+      if (red_invert_pre) filename+="!";
+      filename+= chan1_depth;
+      if (green_invert_pre) filename+="!";
+      filename+= chan2_depth;
+      if (blue_invert_pre) filename+="!";
+      filename+= chan3_depth;
+      if (red_invert) filename+="!";
+      filename+= swap_mode.charAt(0);
+      if (green_invert) filename+="!";
+      filename+= swap_mode.charAt(1);
+      if (blue_invert) filename+="!";
+      filename+= swap_mode.charAt(2);
+      filename+= sep;
+      filename+= "b" + bit_offset;
+      filename+= sep;
+      filename+= pixel_offset;
+      filename+= sep;
+      filename+= render.width + "x" + render.height;
+      filename+=".png";
+    }
+    return filename;
+  }
+
+  String charSub(String _string) {
+    String s = "";
+    for (int i = 0; i < _string.length(); ++i) {
+      char c = _string.charAt(i);
+      switch(c) {
+      case ' ':
+      case ',':
+      case '.':
+      case '<':
+      case '>':
+      case ':':
+      case '{':
+      case '}':
+      case '[':
+      case ']':
+      case '!':
+      case '@':
+      case '#':
+      case '$':
+      case '%':
+      case '^':
+      case '&':
+      case '*':
+      case '(':
+      case ')':
+      case '-':
+      case '_':
+      case '+':
+      case '=':
+      case '?':
+        c = '_';
+        break;
+      }
+      if (s.length() > 0) {
+        if ( c != '_' || s.charAt(s.length()-1) != '_') {
+          s+=c;
+        }
+      } else {
+        s+=c;
+      }
+    }
+    return s;
+  }
 
   public void open_file() {
     selectInput("Select a file to process:", "inputSelection");
@@ -433,14 +540,18 @@ public class ControlFrame extends PApplet {
   }
 
   public void window_height(int _screen_height) {
-    screen_height=_screen_height;
-    setScreenSize(screen_width, screen_height);
-    updatePixelOffsetSlider();
+    if (_screen_height > 0) {
+      screen_height=_screen_height;
+      setScreenSize(screen_width, screen_height);
+      updatePixelOffsetSlider();
+    }
   }
   public void window_width(int _screen_width) {
-    screen_width = _screen_width;
-    setScreenSize(screen_width, screen_height);
-    updatePixelOffsetSlider();
+    if (_screen_width > 0 ) {
+      screen_width = _screen_width;
+      setScreenSize(screen_width, screen_height);
+      updatePixelOffsetSlider();
+    }
   }
 
   /////////////////////////////////////////////////////////////////

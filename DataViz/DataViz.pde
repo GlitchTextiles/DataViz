@@ -82,6 +82,7 @@ boolean green_invert_pre=false;
 boolean blue_invert_pre=false;
 
 PImage render = createImage(screen_width, screen_height, RGB);
+String thePath = "";
 
 void setup() {
   //window setup
@@ -111,19 +112,17 @@ void setDepth(int depth1, int depth2, int depth3) {
 }
 
 
-void loadData(String thePath) {
-  
-  raw_bytes = loadBytes(thePath);
+void loadData(String _thePath) {
+  thePath=_thePath;
+  raw_bytes = loadBytes(_thePath);
   raw_bits = bytes_to_bits(raw_bytes);
-
   bit_offset = 0; // skips bits 
   pixel_offset = 0; // skips pixels
-
   redraw();
 }
 
-void saveData(String thePath) {
-  saveFrame(thePath+".PNG");
+void saveData(String _thePath) {
+  render.save(_thePath+".PNG");
 }
 
 void setScreenSize(int _width, int _height) {

@@ -218,7 +218,7 @@ public class ControlFrame extends PApplet {
       .setSize(50, 20)
       .setLabel("enter width")
       ;
-      
+
     cp5.addTextfield("set_window_height")
       .setPosition(300, 45)
       .setSize(50, 20)
@@ -235,6 +235,12 @@ public class ControlFrame extends PApplet {
       .setPosition(400, 140)
       .setSize(40, 20)
       .setLabel("save")
+      ;
+
+    cp5.addButton("save_batch")
+      .setPosition(400, 110)
+      .setSize(40, 20)
+      .setLabel("batch")
       ;
   }
 
@@ -399,16 +405,18 @@ public class ControlFrame extends PApplet {
     case ')': //increase greyscale bit depth 
       if (bw_depth<24) cp5.getController("depth").setValue(bw_depth+1);
     case '[': //decrease window width by 1 pixel
-      set_window_width(screen_width-1);
+    int newWidth = screen_width - 1;
+      if ( newWidth > 0) cp5.get(Numberbox.class, "window_width").setValue(newWidth);
       break;
     case ']': //increase window width by 1 pixel
-      set_window_width(screen_width+1);
+      cp5.get(Numberbox.class, "window_width").setValue(screen_width + 1);
       break;
     case '{': //decrease window height by 1 pixel
-      set_window_height(screen_height-1);
+      int newHeight = screen_height - 1;
+      if ( newHeight > 0) cp5.get(Numberbox.class, "window_height").setValue(newHeight);
       break;
     case '}': //increase window height by 1 pixel
-      set_window_height(screen_height+1);
+      cp5.get(Numberbox.class, "window_height").setValue(screen_height + 1);
       break;
     }
     parent.redraw();
@@ -419,15 +427,16 @@ public class ControlFrame extends PApplet {
   }
 
   /////////////////////////////////////////////////////////////////
-  // File Handling
+  // Filename Parsing and Contruction
   /////////////////////////////////////////////////////////////////
 
+
   String generateFilename() {
-    //format: <inputFile>-<ch1_depth><ch2_depth><ch3_depth><swap_mode>-<bit_offset>-<pixeloffset>
+    //format: <outputFile>-<ch1_depth><ch2_depth><ch3_depth><swap_mode>-<bit_offset>-<pixeloffset>
     String sep = "-";
     String filename= "";
-    if (thePath.length() > 0) {
-      String[] parsedPath = splitTokens(thePath, "/\\");
+    if (inputPath.length() > 0) {
+      String[] parsedPath = splitTokens(inputPath, "/\\");
       String inputFile = charSub(parsedPath[parsedPath.length-1]);
       int radioIndex=int(cp5.get(RadioButton.class, "swap_mode").getValue());
       String swap_mode=cp5.get(RadioButton.class, "swap_mode").getItem(radioIndex).getName();
@@ -500,6 +509,10 @@ public class ControlFrame extends PApplet {
     return s;
   }
 
+  /////////////////////////////////////////////////////////////////
+  // File Handling
+  /////////////////////////////////////////////////////////////////
+
   public void open_file() {
     selectInput("Select a file to process:", "inputSelection");
   }
@@ -509,12 +522,15 @@ public class ControlFrame extends PApplet {
       println("Window was closed or the user hit cancel.");
     } else {
       println("User selected " + input.getAbsolutePath());
-      loadData(input.getAbsolutePath());
+      inputPath=input.getAbsolutePath();
+      outputPath=inputPath;
+      loadData(inputPath);
       updatePixelOffsetSlider();
     }
   }
 
   public void save_file() {
+    if (inputPath.equals("")) println("No input file selected. Saved file will be blank.");
     selectOutput("Select a file to process:", "outputSelection");
   }
 
@@ -523,7 +539,38 @@ public class ControlFrame extends PApplet {
       println("Window was closed or the user hit cancel.");
     } else {
       println("User selected " + output.getAbsolutePath());
-      saveData(output.getAbsolutePath());
+      outputPath=output.getAbsolutePath();
+      saveData(outputPath);
+    }
+  }
+
+  public void save_batch() {
+    if (!inputPath.equals("")) {
+      selectFolder("Select a file to process:", "batchSelection");
+    } else {
+      println("Can't batch process. Input file not selected.");
+    }
+  }
+
+  public void batchSelection(File dir) {
+    if (dir == null) {
+      println("Window was closed or the user hit cancel.");
+    } else {
+      println("User selected " + dir.getAbsolutePath());
+      outputPath=dir.getAbsolutePath();
+      int last_bit_offset = bit_offset;
+      int last_swap_mode = swap_mode;
+      for (int i = 0; i < pixel_depth; ++i) {
+        for (int j = 0; j < 6; ++j) {
+          cp5.get(Slider.class, "set_bit_offset").setValue(i);
+          swap_mode(j);
+          cp5.get(RadioButton.class, "swap_mode").activate(j);
+          bits_to_pixels(render);
+          saveData(outputPath+"/"+generateFilename());
+        }
+      }
+      bit_offset = last_bit_offset;
+      swap_mode = last_swap_mode;
     }
   }
 
@@ -531,12 +578,14 @@ public class ControlFrame extends PApplet {
   // Images Size
   /////////////////////////////////////////////////////////////////
 
-  public void set_window_width(int _width) {
-    if (_width > 0) cp5.get(Numberbox.class, "window_width").setValue(_width);
+  public void set_window_width(String _width) {
+    int newWidth=parseInt(_width);
+    if (newWidth > 0) cp5.get(Numberbox.class, "window_width").setValue(newWidth);
   }
 
-  public void set_window_height(int _height) {
-    if (_height > 0) cp5.get(Numberbox.class, "window_height").setValue(_height);
+  public void set_window_height(String _height) {
+    int newHeight=parseInt(_height);
+    if ( newHeight> 0) cp5.get(Numberbox.class, "window_height").setValue(newHeight);
   }
 
   public void window_height(int _screen_height) {
@@ -597,10 +646,7 @@ public class ControlFrame extends PApplet {
         break;
       }
       float maxOffset = constrain((raw_bits.length/divisor)-(screen_height*screen_width), 1, (raw_bits.length/divisor));
-      cp5.get(Slider.class, "set_pixel_offset")
-        .setRange(0, maxOffset)
-        .setValue(pixel_offset)
-        ;
+      cp5.get(Slider.class, "set_pixel_offset").setRange(0, maxOffset).setValue(pixel_offset);
     }
   }
 

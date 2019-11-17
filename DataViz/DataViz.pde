@@ -54,8 +54,8 @@ int GUILocationX = 0;
 int GUILocationY = 10;
 
 //DataViz Frame Dimensions and Location
-int screen_width = 768;
-int screen_height = 1000;
+int screen_width = 384;
+int screen_height = 500;
 int WindowLocationX = GUIWidth;
 int WindowLocationY = 10;
 
@@ -82,7 +82,8 @@ boolean green_invert_pre=false;
 boolean blue_invert_pre=false;
 
 PImage render = createImage(screen_width, screen_height, RGB);
-String thePath = "";
+String inputPath = "";
+String outputPath = "";
 
 void setup() {
   //window setup
@@ -94,6 +95,7 @@ void setup() {
   gui = new ControlFrame(this, GUILocationX, GUILocationY, GUIWidth, GUIHeight);
   setDepth(1, 1, 1);  
   noLoop();
+  noSmooth();
 }
 
 void draw() {
@@ -113,7 +115,6 @@ void setDepth(int depth1, int depth2, int depth3) {
 
 
 void loadData(String _thePath) {
-  thePath=_thePath;
   raw_bytes = loadBytes(_thePath);
   raw_bits = bytes_to_bits(raw_bytes);
   bit_offset = 0; // skips bits 

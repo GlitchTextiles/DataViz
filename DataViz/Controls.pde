@@ -268,7 +268,7 @@ public class ControlFrame extends PApplet {
         if (bit_offset>0) cp5.getController( "set_bit_offset").setValue(bit_offset-1);
         break;
       case 39: //RIGHTARROW
-        if (bit_offset<pixel_depth) cp5.getController( "set_bit_offset").setValue(bit_offset+1);
+        if (bit_offset < pixel_depth-1) cp5.getController( "set_bit_offset").setValue(bit_offset+1);
         break;
       }
     } else {
@@ -460,7 +460,6 @@ public class ControlFrame extends PApplet {
       filename+= pixel_offset;
       filename+= sep;
       filename+= render.width + "x" + render.height;
-      filename+=".png";
     }
     return filename;
   }
@@ -715,12 +714,6 @@ public class ControlFrame extends PApplet {
     if (pixel_offset>_lines*pixel_depth) cp5.getController("set_pixel_offset").setValue(pixel_offset-screen_width*_lines);
     if (pixel_offset<_lines*pixel_depth) cp5.getController("set_pixel_offset").setValue(0);
   }
-
-
-  //public void frame_dec(int _lines) {
-  //  if (pixel_offset>0) pixel_offset-=screen_width*_lines;
-  //  if (pixel_offset<0) pixel_offset=0;
-  //}
 
   public void mouseReleased() {
     parent.redraw();

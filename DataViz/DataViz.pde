@@ -123,19 +123,20 @@ void loadData(String _thePath) {
 }
 
 void saveData(String _thePath) {
-  render.save(_thePath+".PNG");
+  render.save(_thePath+".png");
 }
 
 void setScreenSize(int _width, int _height) {
-  surface.setSize(_width, _height);
   render = createImage(_width, _height, RGB);
+  surface.setSize(_width, _height);
+  redraw();
 }
 
 boolean[] bytes_to_bits(byte[] _bytes) {
   boolean[] bits = new boolean[_bytes.length*8];
   for (int i = 0; i < _bytes.length; i++) {    
     for (int j = 0; j < 8; j++) {    
-      bits[(i*8)+j] = boolean((_bytes[i] >> j) & 1);
+      bits[(i*8)+j] = boolean(_bytes[i] >> j & 1);
     }
   }
   return bits;
@@ -156,9 +157,9 @@ void renderRGB(PImage _image) {
   _image.loadPixels();
   for (int i = 0; i < _image.pixels.length; i++) {
 
-    int origin=i+pixel_offset;
-    int index=0;
-    int data=0;
+    int origin = i + pixel_offset;
+    int index = 0;
+    int data = 0;
     int chan1 = 0;
     int chan2 = 0; 
     int chan3 = 0; 
@@ -170,17 +171,17 @@ void renderRGB(PImage _image) {
     //using some bit shifting voodoo to pack bits into channel values  
 
     for (int x = 0; x < chan1_depth; x++) {
-      data=0;
-      index=(origin*pixel_depth)+x+bit_offset;
-      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]);
+      data = 0;
+      index = ( origin * pixel_depth ) + x + bit_offset;
+      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]) & 1;
       chan1 |= data << x;
     }
     chan1*=(255/(pow(2, (chan1_depth))-1)); //scale to 0-255
 
     for (int y = 0; y < chan2_depth; y++) {
-      data=0;
-      index = (origin*pixel_depth)+chan1_depth+y+bit_offset;
-      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]);
+      data = 0;
+      index = ( origin * pixel_depth ) + chan1_depth + y + bit_offset;
+      if (index >=0 && index < raw_bits.length ) data = int(raw_bits[index]) & 1;
       chan2 |= data << y;
     }
     chan2*=(255/(pow(2, (chan2_depth))-1)); //scale to 0-255
@@ -188,7 +189,7 @@ void renderRGB(PImage _image) {
     for (int z = 0; z < chan3_depth; z++) {
       data=0;
       index=(origin*pixel_depth)+chan1_depth+chan2_depth+z+bit_offset;
-      if (index >=0 && index < raw_bits.length) data = int(raw_bits[index]);
+      if (index >=0 && index < raw_bits.length) data = int(raw_bits[index]) & 1;
       chan3 |= data << z;
     }
     chan3*=(255/(pow(2, (chan3_depth))-1)); //scale to 0-255

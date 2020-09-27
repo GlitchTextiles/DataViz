@@ -299,7 +299,7 @@ public class ControlFrame extends PApplet {
       println(generateFilename());
       break;
     case '0':
-      cp5.get(Toggle.class, "set_color_mode").setValue(mode^1);
+      cp5.get(Toggle.class, "set_color_mode").setValue(1 - cp5.get(Toggle.class, "set_color_mode").getValue());
       break;
     case '1':
       swap_mode(0);
@@ -326,60 +326,25 @@ public class ControlFrame extends PApplet {
       cp5.get(RadioButton.class, "swap_mode").activate(5);
       break;
     case 'q':
-      if (red_invert) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("R_INV").setValue(value);
+      cp5.getController("R_INV").setValue(1 - cp5.getController("R_INV").getValue());
       break;
     case 'w':
-      if (green_invert) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("G_INV").setValue(value);
+      cp5.getController("G_INV").setValue(1 - cp5.getController("G_INV").getValue());
       break;
     case 'e':
-      if (blue_invert) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("B_INV").setValue(value);
+      cp5.getController("B_INV").setValue(1 - cp5.getController("B_INV").getValue());
       break;
     case 'Q':
-      if (red_invert_pre) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("R_INV_PRE").setValue(value);
+      cp5.getController("R_INV_PRE").setValue(1 - cp5.getController("R_INV_PRE").getValue());
       break;
     case 'W':
-      if (green_invert_pre) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("G_INV_PRE").setValue(value);
+      cp5.getController("G_INV_PRE").setValue(1 - cp5.getController("G_INV_PRE").getValue());
       break;
     case 'E':
-      if (blue_invert_pre) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("B_INV_PRE").setValue(value);
+      cp5.getController("B_INV_PRE").setValue(1 - cp5.getController("B_INV_PRE").getValue());
       break;
     case 'z':
-      if (bw_invert) {
-        value = 0.0;
-      } else {
-        value = 1.0;
-      }
-      cp5.getController("INV").setValue(value);
+      cp5.getController("INV").setValue(1 - cp5.getController("INV").getValue());
       break;
     case 'r': //incrase red channel bit depth
       if (chan1_depth >= 0) cp5.getController("set_chan1_depth").setValue(++chan1_depth);
@@ -405,7 +370,7 @@ public class ControlFrame extends PApplet {
     case ')': //increase greyscale bit depth 
       if (bw_depth<24) cp5.getController("depth").setValue(bw_depth+1);
     case '[': //decrease window width by 1 pixel
-    int newWidth = screen_width - 1;
+      int newWidth = screen_width - 1;
       if ( newWidth > 0) cp5.get(Numberbox.class, "window_width").setValue(newWidth);
       break;
     case ']': //increase window width by 1 pixel
@@ -524,7 +489,6 @@ public class ControlFrame extends PApplet {
       inputPath=input.getAbsolutePath();
       outputPath=inputPath;
       loadData(inputPath);
-      updatePixelOffsetSlider();
     }
   }
 
@@ -564,7 +528,7 @@ public class ControlFrame extends PApplet {
           cp5.get(Slider.class, "set_bit_offset").setValue(i);
           swap_mode(j);
           cp5.get(RadioButton.class, "swap_mode").activate(j);
-          bits_to_pixels(render);
+          render = bits_to_pixels(raw_bits);
           saveData(outputPath+"/"+generateFilename());
         }
       }
@@ -591,14 +555,12 @@ public class ControlFrame extends PApplet {
     if (_screen_height > 0) {
       screen_height=_screen_height;
       setScreenSize(screen_width, screen_height);
-      updatePixelOffsetSlider();
     }
   }
   public void window_width(int _screen_width) {
     if (_screen_width > 0 ) {
       screen_width = _screen_width;
       setScreenSize(screen_width, screen_height);
-      updatePixelOffsetSlider();
     }
   }
 
@@ -608,45 +570,27 @@ public class ControlFrame extends PApplet {
 
   public void set_chan1_depth(int _value) {
     setDepth(_value, chan2_depth, chan3_depth);
-    updatePixelOffsetSlider();
+    set_pixel_offset(cp5.getController("set_pixel_offset").getValue());
   }
 
   public void set_chan2_depth(int _value) {
     setDepth(chan1_depth, _value, chan3_depth);
-    updatePixelOffsetSlider();
+    set_pixel_offset(cp5.getController("set_pixel_offset").getValue());
   }
 
   public void set_chan3_depth(int _value) {
     setDepth(chan1_depth, chan2_depth, _value);
-    updatePixelOffsetSlider();
+    set_pixel_offset(cp5.getController("set_pixel_offset").getValue());
   }
 
   public void set_color_mode(int _mode) {
     mode = _mode;
-    updatePixelOffsetSlider();
+    set_pixel_offset(cp5.getController("set_pixel_offset").getValue());
   }
 
   public void depth(int value) {
     bw_depth = value;
-    updatePixelOffsetSlider();
-  }
-
-  public void updatePixelOffsetSlider() {
-    if (raw_bits.length > 0) {
-      float divisor=1.0;
-      switch(mode) {
-      case 0:
-        if (pixel_depth>0) divisor = pixel_depth;
-        break;
-      case 1:
-        if (bw_depth>0) divisor = bw_depth;
-        break;
-      default:
-        break;
-      }
-      float maxOffset = constrain((raw_bits.length/divisor)-(screen_height*screen_width), 1, (raw_bits.length/divisor));
-      cp5.get(Slider.class, "set_pixel_offset").setRange(0, maxOffset).setValue(pixel_offset);
-    }
+    set_pixel_offset(cp5.getController("set_pixel_offset").getValue());
   }
 
   public void swap_mode(int id) {
@@ -661,37 +605,40 @@ public class ControlFrame extends PApplet {
     bit_offset = _value;
   }
 
-  public void set_pixel_offset(int _offset) {
-    if (raw_bits.length>0) {
-      float divisor=1.0;
-      switch(mode) {
-      case 0:
-        if (pixel_depth>0) divisor = pixel_depth;
-        break;
-      case 1:
-        if (bw_depth>0) divisor = bw_depth;
-        break;
-      default:
-        break;
-      }
-      int maxOffset = (int) constrain((raw_bits.length/divisor)-(screen_height*screen_width), 0, (raw_bits.length/divisor));
-
-      if ( _offset >= 0 ) {
-        if (_offset < maxOffset) {
-          pixel_offset = _offset;
-        } else {
-          pixel_offset = maxOffset;
-        }
-      }
+  public void set_pixel_offset(float _offset) {
+    if (raw_bits.size() > 0) {
+      pixel_offset = int( _offset * calc_maxOffset());
+      parent.redraw();
     }
   }
 
+  public float calc_maxOffset() {
+    float divisor = 1.0;
+    switch(mode) {
+    case 0:
+      if (pixel_depth > 0) divisor = pixel_depth;
+      break;
+    case 1:
+      if (bw_depth > 0) divisor = bw_depth;
+      break;
+    default:
+      break;
+    }
+    return constrain((raw_bits.size() / divisor) - (screen_height * screen_width), 0, (raw_bits.size() / divisor));
+  }
+
   public void pixel_inc() {
-    set_pixel_offset(pixel_offset+1);
+    cp5.getController("set_pixel_offset")
+      .setValue(cp5.getController("set_pixel_offset")
+      .getValue() + (1 / calc_maxOffset()))
+      ;
   }
 
   public void pixel_dec() {
-    set_pixel_offset(pixel_offset-1);
+    cp5.getController("set_pixel_offset")
+      .setValue(cp5.getController("set_pixel_offset")
+      .getValue() - (1 / calc_maxOffset()))
+      ;
   }
 
   public void line_multiplier(int _value) {
@@ -699,7 +646,7 @@ public class ControlFrame extends PApplet {
   }
 
   public void line_inc() {
-    if (pixel_offset < raw_bits.length/pixel_depth) cp5.getController("set_pixel_offset").setValue(pixel_offset+(screen_width*line_multiplier));
+    if (pixel_offset < raw_bits.size()/pixel_depth) cp5.getController("set_pixel_offset").setValue(pixel_offset+(screen_width*line_multiplier));
   }
 
   public void line_dec() {
@@ -707,7 +654,7 @@ public class ControlFrame extends PApplet {
   }
 
   public void frame_inc(int _lines) {
-    if (pixel_offset < raw_bits.length/pixel_depth) cp5.getController("set_pixel_offset").setValue(pixel_offset+screen_width*_lines);
+    if (pixel_offset < raw_bits.size()/pixel_depth) cp5.getController("set_pixel_offset").setValue(pixel_offset+screen_width*_lines);
   }
 
   public void frame_dec(int _lines) {
